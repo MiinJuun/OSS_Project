@@ -1,7 +1,8 @@
 # 1. Conceptualization
 
 <div align="center">
-  <img width="800" alt="프로젝트 대표 이미지" src="https://github.com/user-attachments/assets/b3e5a92b-6487-4705-824e-5d9369d25fa2" />
+  <img width="800" height="400" alt="image" src="https://github.com/user-attachments/assets/cb3922d7-0031-47a2-b02d-bba4b990673a" />
+
 </div>
 
 <br>
@@ -51,7 +52,8 @@
 ## 2. System Context Diagram
 
 <div align="center">
-  <img width="800" alt="System Context Diagram" src="https://github.com/user-attachments/assets/0d887d89-2aba-45d4-bc6a-16e7f92d8115" />
+  <img width="1753" height="1084" alt="image" src="https://github.com/user-attachments/assets/551dc764-659f-408f-ba1a-e98b5d8dbada" />
+
 </div>
 
 <br>
