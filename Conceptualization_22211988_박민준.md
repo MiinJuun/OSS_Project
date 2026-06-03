@@ -19,9 +19,10 @@
 
 | Revision Date | Version | Description | Author |
 | :---: | :---: | :--- | :---: |
-| 26.03.26 | 1.0.0 | Conceptualization  | Minjun Park |
-| 26.05.05 | 1.1.0 | 기술 스택 구체화 (동적 크롤링을 위한 Selenium 도입) | Minjun Park |
-| 26.05.28 | 1.1.1| KoBERT -> KoELECTRA | Minjun Park |
+| 26.04.28 | 1.0.0 | Add files via upload | Minjun Park |
+| 26.04.28 | 1.1.0 | 대표 이미지 및 다이어그램 추가 | Minjun Park |
+| 26.05.07 | 1.2.0 | 기술 스택 구체화 내용 추가 (동적 크롤링을 위한 Selenium 도입) | Minjun Park |
+| 26.06.03 | 1.3.0 | Update revision history in markdown file | Minjun Park |
 
 ---
 
