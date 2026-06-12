@@ -122,20 +122,6 @@ nohup java -jar build/libs/*SNAPSHOT.jar > spring_server.log 2>&1 &
 ```
 ---
 
-## 개발 환경 (Development Environment)
-
-| 항목 | 내용 |
-| :--- | :--- |
-| OS | Windows 11 |
-| IDE | VS Code (Python), IntelliJ IDEA (Spring Boot) |
-| Python | 3.10+ |
-| 주요 라이브러리 | FastAPI, Flask, SQLAlchemy, Selenium, Transformers, KoNLPy |
-| AI 모델 | `monologg/koelectra-base-finetuned-sentiment` (HuggingFace) |
-| DB | SQLite (via SQLAlchemy ORM) |
-| 프론트엔드 | HTML5 + Tailwind CSS + Chart.js |
-
----
-
 ## 개발자 정보
 
 | 항목 | 내용 |
