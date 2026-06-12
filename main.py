@@ -58,8 +58,12 @@ def get_chrome_driver(profile_suffix="default"):
     options.add_argument('--disable-restore-session-state')  # 세션 복원 차단
     options.add_argument('--disable-session-crashed-bubble')
 
+    options.add_argument('--window-size=1920,1080')
+    options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36')
+
     driver = uc.Chrome(options=options, use_subprocess=True, version_main=148)
     driver.set_window_size(1920, 1080)
+    
     return driver
 
 
