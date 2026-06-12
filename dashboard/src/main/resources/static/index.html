@@ -240,7 +240,7 @@
         showLoading(); // 로딩 창 띄우기
 
         try {
-            const response = await fetch(`http://localhost:8001/api/crawl?place=${encodeURIComponent(placeInput)}`);
+            const response = await fetch(`http://52.79.251.32:8001/api/crawl?place=${encodeURIComponent(placeInput)}`);
             if (!response.ok) {
                 throw new Error(`서버 에러: ${response.status}`);
             }

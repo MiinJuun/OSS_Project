@@ -11,7 +11,7 @@ import java.util.List;
 public class ReviewService {
 
     // 파이썬 서버 주소 (네가 작성한 기존 코드 유지)
-    private final String PYTHON_API_URL = "http://localhost:8001/api/crawl?place=";
+    private final String PYTHON_API_URL = "http://52.79.251.32:8001/api/crawl?place=";
 
     public Map<String, Object> getReviewData(String place) {
         RestTemplate restTemplate = new RestTemplate();
