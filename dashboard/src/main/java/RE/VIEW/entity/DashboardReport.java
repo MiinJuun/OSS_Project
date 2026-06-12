@@ -17,11 +17,10 @@ public class DashboardReport {
 
     private Double discrepancyRate;
     @Column(columnDefinition = "TEXT")
-    private String crossKeywords; // JSON 형태 저장
+    private String crossKeywords; 
     private Boolean isAbusingSuspected;
     private LocalDateTime generateAt = LocalDateTime.now();
 
     public void updateDiscrepancyRate() {
-        // 괴리율 계산 로직을 수행하는 메서드
     }
 }

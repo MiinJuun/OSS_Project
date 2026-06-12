@@ -1,4 +1,3 @@
-# keywords.py
 from konlpy.tag import Okt
 from collections import Counter
 from database import SessionLocal, Review, DashboardReport
@@ -6,9 +5,7 @@ import json
 
 okt = Okt()
 
-# -------------------------------------------------------
-# 불용어 목록 (분석에서 제외할 단어들)
-# -------------------------------------------------------
+# 분석에서 제외할 단어들
 STOPWORDS = {
     # 1글자
     '것', '수', '때', '곳', '점', '분', '거', '등', '번', '잔', '집', '맛', '곳',
@@ -20,10 +17,7 @@ STOPWORDS = {
 }
 
 
-# -------------------------------------------------------
 # UC-7: 교차 검증 키워드 추출
-# -------------------------------------------------------
-
 def extract_keywords_from_reviews(reviews: list, top_n: int = 20) -> Counter:
     """
     리뷰 텍스트 리스트에서 형태소 분석 후
@@ -33,7 +27,6 @@ def extract_keywords_from_reviews(reviews: list, top_n: int = 20) -> Counter:
 
     for text in reviews:
         try:
-            # 명사 추출 (일반명사 + 고유명사)
             nouns = okt.nouns(text)
             filtered = [
                 word for word in nouns
@@ -41,7 +34,7 @@ def extract_keywords_from_reviews(reviews: list, top_n: int = 20) -> Counter:
             ]
             word_counts.update(filtered)
         except Exception as e:
-            print(f"⚠️ 형태소 분석 오류 (스킵): {e}")
+            print(f"형태소 분석 오류 (스킵): {e}")
             continue
 
     return word_counts
@@ -64,7 +57,7 @@ def extract_cross_keywords(
         "kakao_top"       : {"육즙": 8, ...}
     }
     """
-    print("🔍 형태소 분석 중...")
+    print("형태소 분석 중...")
 
     naver_counter = extract_keywords_from_reviews(naver_reviews, top_n)
     kakao_counter = extract_keywords_from_reviews(kakao_reviews, top_n)
@@ -72,21 +65,18 @@ def extract_cross_keywords(
     naver_top_keys = set(dict(naver_counter.most_common(top_n)).keys())
     kakao_top_keys = set(dict(kakao_counter.most_common(top_n)).keys())
 
-    # 교집합: 양쪽 모두 상위에 등장한 키워드
     common_keys = naver_top_keys & kakao_top_keys
 
-    # 교차 키워드를 두 플랫폼 빈도 합산 기준으로 정렬
     cross_keywords = sorted(
         common_keys,
         key=lambda w: naver_counter[w] + kakao_counter[w],
         reverse=True
     )
 
-    # 각 플랫폼 단독 키워드 (교차 키워드에 없는 것)
     naver_only = [k for k in naver_top_keys - common_keys][:5]
     kakao_only = [k for k in kakao_top_keys - common_keys][:5]
 
-    print(f"✅ 교차 키워드 {len(cross_keywords)}개 추출 완료")
+    print(f"교차 키워드 {len(cross_keywords)}개 추출 완료")
 
     return {
         "cross_keywords": cross_keywords[:top_n],
@@ -96,11 +86,7 @@ def extract_cross_keywords(
         "kakao_top"     : dict(kakao_counter.most_common(top_n)),
     }
 
-
-# -------------------------------------------------------
 # UC-9: 베이지안 평균 (표본 수 불균형 보정)
-# -------------------------------------------------------
-
 def bayesian_average(
     scores: list,
     global_mean: float = 3.5,
@@ -141,7 +127,6 @@ def calc_platform_bayesian(place_id: int, platform: str) -> dict:
     try:
         from database import SentimentResult
 
-        # 해당 장소 + 플랫폼의 리뷰 감성 결과 조회
         results = (
             db.query(SentimentResult)
             .join(Review, SentimentResult.review_id == Review.id)
@@ -159,7 +144,6 @@ def calc_platform_bayesian(place_id: int, platform: str) -> dict:
                 "review_count": 0
             }
 
-        # positive_prob → 1.0~5.0 척도 변환
         scores = [1.0 + (r.positive_prob * 4.0) for r in results]
 
         raw_avg    = round(sum(scores) / len(scores), 2)
@@ -174,11 +158,7 @@ def calc_platform_bayesian(place_id: int, platform: str) -> dict:
     finally:
         db.close()
 
-
-# -------------------------------------------------------
 # DashboardReport DB 저장
-# -------------------------------------------------------
-
 def save_dashboard_report(
     place_id        : int,
     discrepancy_rate: float,
@@ -210,7 +190,7 @@ def save_dashboard_report(
             ))
 
         db.commit()
-        print("💾 DashboardReport 저장 완료")
+        print("DashboardReport 저장 완료")
 
     finally:
         db.close()

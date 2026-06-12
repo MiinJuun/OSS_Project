@@ -1,14 +1,10 @@
-# anomaly.py
 from database import SessionLocal, Review, ReviewerProfile, AnomalyLog
 from collections import Counter
 from datetime import datetime, timedelta
 import re
 from typing import Optional
 
-# -------------------------------------------------------
 # UC-3: 작성자 신뢰도 지수 산출
-# -------------------------------------------------------
-
 def calc_reliability_score(reviewer_id: str, platform: str) -> Optional[float]:
     """
     작성자의 과거 활동 패턴을 분석해 신뢰도 지수(0.0~1.0) 반환
@@ -29,11 +25,9 @@ def calc_reliability_score(reviewer_id: str, platform: str) -> Optional[float]:
 
         total = len(reviews)
 
-        # 리뷰가 3개 미만이면 판별 불가
         if total < 3:
             return None
 
-        # 5점 비율 계산
         rated = [r for r in reviews if r.star_rating is not None]
         five_star_ratio = (
             sum(1 for r in rated if r.star_rating == 5.0) / len(rated)
@@ -98,11 +92,7 @@ def save_reviewer_profile(reviewer_id: str, platform: str):
     finally:
         db.close()
 
-
-# -------------------------------------------------------
 # UC-6: 시계열 스파이크 탐지 (단기간 리뷰 급증)
-# -------------------------------------------------------
-
 def detect_spike(place_id: int, window_days: int = 7, threshold: float = 3.0) -> dict:
     """
     특정 장소의 리뷰 시계열 데이터를 분석해 급증 패턴 탐지
@@ -123,12 +113,10 @@ def detect_spike(place_id: int, window_days: int = 7, threshold: float = 3.0) ->
     try:
         reviews = db.query(Review).filter(Review.place_id == place_id).all()
 
-        # written_date 없는 경우 collected_at으로 대체
         dates = []
         for r in reviews:
             if r.written_date:
                 try:
-                    # "2024-03" 또는 "2024-03-15" 형식 모두 대응
                     month_str = r.written_date[:7]
                     dates.append(month_str)
                 except:
@@ -145,23 +133,19 @@ def detect_spike(place_id: int, window_days: int = 7, threshold: float = 3.0) ->
                 "detected_month": None
             }
 
-        # 월별 집계
         monthly_counts = Counter(dates)
         avg = sum(monthly_counts.values()) / len(monthly_counts)
 
-        # 최근 window_days 기준 해당 월
         recent_month = (datetime.now() - timedelta(days=window_days)).strftime("%Y-%m")
         current_month = datetime.now().strftime("%Y-%m")
 
-        # 최근 2개월 중 최대값으로 판단
         recent_count = max(
             monthly_counts.get(recent_month, 0),
             monthly_counts.get(current_month, 0)
         )
         spike_ratio = round(recent_count / avg, 2) if avg > 0 else 0.0
-        is_spike = spike_ratio >= threshold and recent_count >= 5  # 최소 5개 이상일 때만 스파이크로 판단
+        is_spike = spike_ratio >= threshold and recent_count >= 5  
 
-        # 스파이크 감지 시 DB에 이력 저장
         if is_spike:
             db.add(AnomalyLog(
                 place_id       = place_id,
@@ -183,10 +167,7 @@ def detect_spike(place_id: int, window_days: int = 7, threshold: float = 3.0) ->
         db.close()
 
 
-# -------------------------------------------------------
 # UC-6: 텍스트 유사도 기반 복붙 리뷰 탐지
-# -------------------------------------------------------
-
 def detect_similar_reviews(place_id: int, similarity_threshold: float = 0.7) -> dict:
     """
     같은 장소 리뷰 중 텍스트가 지나치게 유사한 쌍을 탐지
@@ -221,7 +202,7 @@ def detect_similar_reviews(place_id: int, similarity_threshold: float = 0.7) -> 
                     suspicious_ids.add(reviews[i].id)
                     suspicious_ids.add(reviews[j].id)
 
-        is_suspicious = similar_pairs >= 3  # 3쌍 이상 유사 리뷰 감지 시 의심
+        is_suspicious = similar_pairs >= 3  
 
         if is_suspicious:
             db.add(AnomalyLog(
@@ -241,11 +222,6 @@ def detect_similar_reviews(place_id: int, similarity_threshold: float = 0.7) -> 
     finally:
         db.close()
 
-
-# -------------------------------------------------------
-# 통합 어뷰징 점수 계산
-# -------------------------------------------------------
-
 def calc_abusing_score(place_id: int) -> dict:
     """
     스파이크 + 유사도 탐지 결과를 종합해
@@ -261,12 +237,10 @@ def calc_abusing_score(place_id: int) -> dict:
 
     score = 0.0
 
-    # 스파이크 점수 반영 (최대 50점)
     if spike_result["is_spike"]:
         spike_contribution = min(50.0, spike_result["spike_ratio"] * 10)
         score += spike_contribution
 
-    # 유사도 점수 반영 (최대 50점)
     if sim_result["is_suspicious"]:
         sim_contribution = min(50.0, sim_result["similar_pairs"] * 5)
         score += sim_contribution

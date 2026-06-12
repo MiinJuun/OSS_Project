@@ -10,7 +10,6 @@
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
         body { font-family: 'Pretendard', sans-serif; }
-        /* 스크롤바 예쁘게 */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
@@ -94,7 +93,7 @@
                 </div>
 
                 <div class="mt-auto pt-6 border-t border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-800 mb-3 text-center">✨ 공통 교차 검증 키워드</h3>
+                    <h3 class="text-sm font-bold text-slate-800 mb-3 text-center"> 공통 교차 검증 키워드</h3>
                     <div id="crossKeywords" class="flex flex-wrap gap-2 justify-center">
                         <span class="text-sm text-slate-400">데이터 없음</span>
                     </div>
@@ -245,7 +244,7 @@
                 throw new Error(`서버 에러: ${response.status}`);
             }
             const resultData = await response.json();
-            renderDashboard(resultData); // 성공 시 화면 그리기
+            renderDashboard(resultData); 
         } catch (error) {
             console.error("API 통신 실패:", error);
             alert("데이터 수집 중 오류가 발생했습니다. 파이썬 백엔드 서버(main.py)가 켜져 있는지 확인해주세요.");

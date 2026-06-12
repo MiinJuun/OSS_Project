@@ -23,7 +23,6 @@ public class Review {
     private LocalDateTime collectedAt = LocalDateTime.now();
 
     public Boolean isPositive() {
-        // 감성 분석 모델의 점수를 기반으로 긍정 여부 판단 로직 (임시)
         return starRating != null && starRating >= 3.5;
     }
 }

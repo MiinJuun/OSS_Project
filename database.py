@@ -53,7 +53,7 @@ class ReviewerProfile(Base):
     platform            = Column(Text, nullable=False)
     total_review_count  = Column(Integer, default=0)
     five_star_ratio     = Column(Float, default=0.0)
-    reliability_score   = Column(Float, nullable=True)   # 0.0 ~ 1.0, None = 판별 불가
+    reliability_score   = Column(Float, nullable=True)   
 
 
 # 4. SentimentResult
@@ -63,7 +63,7 @@ class SentimentResult(Base):
     review_id           = Column(Integer, ForeignKey("reviews.id"), unique=True, nullable=False)
     positive_prob       = Column(Float, nullable=False)
     negative_prob       = Column(Float, nullable=False)
-    extracted_keywords  = Column(Text, nullable=True)   # JSON 문자열로 저장 ex) '["맛있","친절"]'
+    extracted_keywords  = Column(Text, nullable=True)   
 
     review              = relationship("Review", back_populates="sentiment")
 
@@ -86,24 +86,23 @@ class DashboardReport(Base):
     __tablename__ = "dashboard_reports"
     id                   = Column(Integer, primary_key=True, index=True)
     place_id             = Column(Integer, ForeignKey("places.id"), nullable=False)
-    discrepancy_rate     = Column(Float, nullable=True)       # 감성 괴리율 (%)
-    cross_keywords       = Column(Text, nullable=True)        # JSON 문자열
-    is_abusing_suspected = Column(Boolean, default=False)     # UC-6 어뷰징 의심 여부
+    discrepancy_rate     = Column(Float, nullable=True)       
+    cross_keywords       = Column(Text, nullable=True)        
+    is_abusing_suspected = Column(Boolean, default=False)     
     generated_at         = Column(DateTime, default=datetime.utcnow)
 
 
-# 7. AnomalyDetector (탐지 이력 로그 테이블)
+# 7. AnomalyDetector
 class AnomalyLog(Base):
     __tablename__ = "anomaly_logs"
     id               = Column(Integer, primary_key=True, index=True)
     place_id         = Column(Integer, ForeignKey("places.id"), nullable=False)
-    anomaly_type     = Column(Text, nullable=False)    # 'spike' | 'similarity' | 'profile'
+    anomaly_type     = Column(Text, nullable=False)    
     threshold        = Column(Float, nullable=True)
     detected_value   = Column(Float, nullable=True)
     detected_at      = Column(DateTime, default=datetime.utcnow)
 
 
-# 테이블 전체 생성
 def init_db():
     Base.metadata.create_all(bind=engine)
 
