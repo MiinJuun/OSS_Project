@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.6'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.review'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // 웹 REST API 개발을 위한 필수 설정
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // JPA (데이터베이스 ORM) - @Entity, JpaRepository 오류 해결의 핵심!
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // H2 Database (개발 및 테스트용 임시 메모리 DB)
+    runtimeOnly 'com.h2database:h2'
+
+    // 롬복 (Lombok) - @Getter, @Setter 등 자동 생성
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // 테스트용 라이브러리
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testCompileOnly 'org.projectlombok:lombok'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

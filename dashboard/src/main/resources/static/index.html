@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RE:VIEW - 다중 플랫폼 리뷰 이상 탐지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <style>
+        body { font-family: 'Pretendard', sans-serif; }
+        /* 스크롤바 예쁘게 */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<nav class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center gap-2">
+        <div class="bg-blue-600 text-white font-bold p-2 rounded-lg text-lg leading-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+        </div>
+        <span class="text-xl font-extrabold tracking-tight text-slate-900">RE:VIEW</span>
+    </div>
+
+    <div class="flex-1 max-w-2xl mx-auto flex items-center relative">
+        <input type="text" id="searchInput" placeholder="분석할 장소명을 정확히 입력하세요... (예: 스타벅스 대구신천DT점)"
+               class="w-full bg-slate-100 border border-transparent focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 rounded-full py-3 pl-5 pr-12 outline-none transition-all duration-200 shadow-sm text-sm">
+        <button id="searchBtn" class="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        </button>
+    </div>
+
+    <button id="pdfBtn" class="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors border border-slate-200 rounded-lg px-4 py-2 bg-white shadow-sm hover:shadow">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+        PDF 출력
+    </button>
+</nav>
+
+<main id="dashboardMain" class="max-w-7xl mx-auto px-6 py-8">
+
+    <div id="alertBanner" class="hidden mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-bold text-red-800">주의: 어뷰징(리뷰 조작)이 강하게 의심되는 장소입니다.</h3>
+                <p class="text-sm text-red-700 mt-1">단기간 내 비정상적인 리뷰 스파이크 및 텍스트 유사성이 탐지되었습니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <div class="flex flex-col gap-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-green-500"></span> 네이버 지도
+                    </h2>
+                    <span class="text-xs font-semibold bg-green-100 text-green-700 px-2 py-1 rounded">수집완료</span>
+                </div>
+                <div class="text-center py-4">
+                    <p class="text-sm text-slate-500 font-medium">베이지안 평균 점수</p>
+                    <p class="text-5xl font-black text-slate-900 mt-2" id="naverScore">0.00</p>
+                    <p class="text-sm text-slate-400 mt-2">단순 평점: <span id="naverRawScore">0.0</span> / 수집된 리뷰: <span id="naverCount">0</span>개</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex-1 flex flex-col h-[500px]">
+                <h3 class="text-sm font-bold text-slate-800 mb-4 border-b pb-2">최신 리뷰 피드</h3>
+                <div id="naverReviewFeed" class="flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-3">
+                    <div class="text-center text-slate-400 mt-10 text-sm">상단에서 장소를 검색해주세요.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 h-full flex flex-col">
+                <div class="absolute top-0 left-0 w-full h-1 bg-blue-600 rounded-t-2xl"></div>
+                <h2 class="text-lg font-bold text-slate-800 text-center mb-2">AI 감성 괴리율 분석</h2>
+                <p class="text-xs text-center text-slate-500 mb-6">양 플랫폼 간의 여론 온도 차이</p>
+
+                <div class="relative w-48 h-48 mx-auto mb-6">
+                    <canvas id="discrepancyChart"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span class="text-3xl font-black text-slate-800" id="diffRate">0%</span>
+                        <span class="text-xs font-medium text-slate-500">괴리율</span>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6 border-t border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-800 mb-3 text-center">✨ 공통 교차 검증 키워드</h3>
+                    <div id="crossKeywords" class="flex flex-wrap gap-2 justify-center">
+                        <span class="text-sm text-slate-400">데이터 없음</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-yellow-400"></div>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-yellow-400"></span> 카카오맵
+                    </h2>
+                    <span class="text-xs font-semibold bg-slate-100 text-slate-500 px-2 py-1 rounded" id="kakaoStatus">대기중</span>
+                </div>
+                <div class="text-center py-4">
+                    <p class="text-sm text-slate-500 font-medium">베이지안 평균 점수</p>
+                    <p class="text-5xl font-black text-slate-900 mt-2" id="kakaoScore">0.00</p>
+                    <p class="text-sm text-slate-400 mt-2">단순 평점: <span id="kakaoRawScore">0.0</span> / 수집된 리뷰: <span id="kakaoCount">0</span>개</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex-1 flex flex-col h-[500px]">
+                <h3 class="text-sm font-bold text-slate-800 mb-4 border-b pb-2">최신 리뷰 피드</h3>
+                <div id="kakaoReviewFeed" class="flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-3">
+                    <div class="text-center text-slate-400 mt-10 text-sm">상단에서 장소를 검색해주세요.</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script>
+    // 1. 대시보드 렌더링 함수
+    function renderDashboard(data) {
+        document.getElementById('searchInput').value = data.place;
+
+        const alertBanner = document.getElementById('alertBanner');
+        if (data.anomaly && data.anomaly.is_absuing) {
+            alertBanner.classList.remove('hidden');
+        } else {
+            alertBanner.classList.add('hidden');
+        }
+
+        // 네이버 바인딩
+        document.getElementById('naverScore').innerText = data.naver.bayesian_avg.toFixed(2);
+        document.getElementById('naverRawScore').innerText = data.naver.score.toFixed(1);
+        document.getElementById('naverCount').innerText = data.naver.review_count;
+        const naverFeed = document.getElementById('naverReviewFeed');
+        naverFeed.innerHTML = "";
+        data.naver.raw_reviews.forEach(text => {
+            naverFeed.innerHTML += `<div class="bg-slate-50 p-3 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 shadow-sm">${text}</div>`;
+        });
+
+        // 카카오 바인딩
+        document.getElementById('kakaoScore').innerText = data.kakao.bayesian_avg.toFixed(2);
+        document.getElementById('kakaoRawScore').innerText = data.kakao.score.toFixed(1);
+        document.getElementById('kakaoCount').innerText = data.kakao.review_count;
+        const kakaoStatus = document.getElementById('kakaoStatus');
+        if(!data.kakao.is_sufficient) {
+            kakaoStatus.innerText = "데이터 부족";
+            kakaoStatus.className = "text-xs font-semibold bg-red-100 text-red-700 px-2 py-1 rounded";
+        } else {
+            kakaoStatus.innerText = "수집완료";
+            kakaoStatus.className = "text-xs font-semibold bg-yellow-100 text-yellow-700 px-2 py-1 rounded";
+        }
+        const kakaoFeed = document.getElementById('kakaoReviewFeed');
+        kakaoFeed.innerHTML = "";
+        data.kakao.raw_reviews.forEach(text => {
+            kakaoFeed.innerHTML += `<div class="bg-slate-50 p-3 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 shadow-sm">${text}</div>`;
+        });
+
+        // 교차 키워드 바인딩
+        const kwContainer = document.getElementById('crossKeywords');
+        kwContainer.innerHTML = "";
+        if(data.cross_keywords && data.cross_keywords.common.length > 0) {
+            data.cross_keywords.common.forEach(kw => {
+                kwContainer.innerHTML += `<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold shadow-sm">#${kw}</span>`;
+            });
+        } else {
+            kwContainer.innerHTML = `<span class="text-sm text-slate-400">공통 키워드가 없습니다.</span>`;
+        }
+
+        // 도넛 차트 바인딩
+        document.getElementById('diffRate').innerText = data.discrepancy_rate + "%";
+        const ctx = document.getElementById('discrepancyChart').getContext('2d');
+        if(window.myDoughnutChart) { window.myDoughnutChart.destroy(); }
+        let naverRatio = 50 + (data.discrepancy_rate / 2);
+        let kakaoRatio = 50 - (data.discrepancy_rate / 2);
+        window.myDoughnutChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['네이버 비중', '카카오 비중'],
+                datasets: [{
+                    data: [naverRatio, kakaoRatio],
+                    backgroundColor: ['#22c55e', '#facc15'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                cutout: '75%',
+                plugins: { legend: { display: false }, tooltip: { enabled: true } },
+                animation: { animateScale: true, animateRotate: true }
+            }
+        });
+    }
+
+    // 2. 로딩 스피너 UI 제어 함수
+    function showLoading() {
+        let loader = document.getElementById('globalLoader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'globalLoader';
+            loader.className = 'fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex flex-col items-center justify-center text-white';
+            loader.innerHTML = `
+                    <svg class="animate-spin h-14 w-14 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <h2 class="text-2xl font-bold mb-2 tracking-tight">리뷰 데이터를 수집하고 AI로 분석 중입니다...</h2>
+                    <p class="text-sm text-slate-300">실시간 크롤링 및 모델 연산으로 인해 약 10~30초 정도 소요됩니다.</p>
+                `;
+            document.body.appendChild(loader);
+        }
+        loader.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        const loader = document.getElementById('globalLoader');
+        if (loader) loader.style.display = 'none';
+    }
+
+    // 3. 백엔드(FastAPI) API 호출 로직
+    async function fetchReviewData() {
+        const placeInput = document.getElementById('searchInput').value.trim();
+        if (!placeInput) {
+            alert("분석할 장소명을 입력해주세요!");
+            return;
+        }
+
+        showLoading(); // 로딩 창 띄우기
+
+        try {
+            const response = await fetch(`http://localhost:8001/api/crawl?place=${encodeURIComponent(placeInput)}`);
+            if (!response.ok) {
+                throw new Error(`서버 에러: ${response.status}`);
+            }
+            const resultData = await response.json();
+            renderDashboard(resultData); // 성공 시 화면 그리기
+        } catch (error) {
+            console.error("API 통신 실패:", error);
+            alert("데이터 수집 중 오류가 발생했습니다. 파이썬 백엔드 서버(main.py)가 켜져 있는지 확인해주세요.");
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // 4. 이벤트 리스너 (검색 실행)
+    document.getElementById('searchBtn').addEventListener('click', fetchReviewData);
+    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            fetchReviewData();
+        }
+    });
+
+    // 5. PDF 출력 기능 (html2pdf 적용)
+    document.getElementById('pdfBtn').addEventListener('click', function() {
+        // 상단 네비게이션을 제외한 실제 대시보드 영역(main)만 캡처
+        const element = document.getElementById('dashboardMain');
+        const placeName = document.getElementById('searchInput').value || '장소미상';
+
+        // PDF 저장 옵션
+        const opt = {
+            margin:       10,
+            filename:     `[REVIEW_REPORT]_${placeName}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' } // 가로 방향으로 쾌적하게 출력
+        };
+
+        // PDF 생성 후 다운로드
+        html2pdf().set(opt).from(element).save();
+    });
+</script>
+</body>
+</html>
